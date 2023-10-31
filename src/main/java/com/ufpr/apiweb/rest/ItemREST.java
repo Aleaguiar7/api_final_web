@@ -1,62 +1,86 @@
 package com.ufpr.apiweb.rest;
 
-import org.springframework.web.bind.annotation.*;
-
-
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.ufpr.apiweb.model.Item;
+import com.ufpr.apiweb.repository.ItemRepository;
 
 @CrossOrigin
 @RestController
+@RequestMapping("/item")
 public class ItemREST {
-    public static List<Item> listaItens = new ArrayList<>();
+    private final ItemRepository repository;
+    private final ModelMapper mapper;
 
-    @GetMapping("/itens")
-    public List<Item> obterItens() {
-        return listaItens;
+    @Autowired
+    public ItemREST(ItemRepository repository, ModelMapper mapper) {
+        this.repository = repository;
+        this.mapper = mapper;
     }
 
-    @GetMapping("/itens/{id}")
-    public Item obterItemPorId(@PathVariable("id") int id) {
-        return listaItens.stream().filter(item -> item.getId() == id).findAny().orElse(null);
+    @GetMapping
+    List<Item> obterItens() {
+        List<Item> itens = repository.findAll();
+        return itens.stream()
+            .map(item -> mapper.map(item, Item.class))
+            .collect(Collectors.toList());
     }
 
-    @PostMapping("/itens")
-    public Item inserirItem(@RequestBody Item item) {
-        Item newItem = listaItens.stream().max(Comparator.comparing(Item::getId)).orElse(null);
-        if (newItem == null)
-            item.setId(1);
-        else
-            item.setId(newItem.getId() + 1);
-        listaItens.add(item);
-        return item;
-    }
-
-    @PutMapping("/itens/{id}")
-    public Item alterarItem(@PathVariable("id") int id, @RequestBody Item item) {
-        Item existingItem = listaItens.stream().filter(i -> i.getId() == id).findAny().orElse(null);
-        if (existingItem != null) {
-            existingItem.setNome(item.getNome());
-            existingItem.setValor(item.getValor());
-            existingItem.setQuantia(item.getQuantia());
+    @GetMapping("/{id_item}")
+    ResponseEntity<Item> obterItemPorId(@PathVariable("id_item") Optional<Item> id_item) {
+    	int getId_item = 0;
+		Item item = repository.findByid(getId_item);
+        if (id_item != null) {
+            return ResponseEntity.ok(mapper.map(item, Item.class));
         }
-        return existingItem;
+        return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/itens/{id}")
-    public Item removerItem(@PathVariable("id") int id) {
-        Item item = listaItens.stream().filter(i -> i.getId() == id).findAny().orElse(null);
-        if (item != null)
-            listaItens.removeIf(i -> i.getId() == id);
-        return item;
+    @PostMapping
+    ResponseEntity<Item> inserirItem(@RequestBody Item item) {
+        Item entity = mapper.map(item, Item.class);
+        repository.save(entity);
+        Item savedItem = repository.findByid(entity.getId_item());
+        Item savedItemDTO = mapper.map(savedItem, Item.class);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedItemDTO);
     }
 
-    static {
-        listaItens.add(new Item(1, "Item1", 10.0, 5));
-        listaItens.add(new Item(2, "Item2", 15.0, 8));
-        listaItens.add(new Item(3, "Item3", 20.0, 3));
+    @PutMapping("/{id_item}")
+    ResponseEntity<Item> alterarItem(@PathVariable("id_item") int id_item, @RequestBody Item item) {
+        Item existingItem = repository.findByid(id_item);
+        if (existingItem != null) {
+            mapper.map(item, existingItem);
+            repository.save(existingItem);
+            return ResponseEntity.ok(mapper.map(existingItem, Item.class));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{id_item}")
+    ResponseEntity<Item> removerItem(@PathVariable("id_item") int id_item) {
+        Item item = repository.findByid(id_item);
+        if (item != null) {
+            repository.deleteById(id_item);
+            return ResponseEntity.ok(mapper.map(item, Item.class));
+        }
+        return ResponseEntity.notFound().build();
     }
 }

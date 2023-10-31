@@ -1,7 +1,6 @@
 package com.ufpr.apiweb.model;
 
-import java.io.Serializable;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,52 +8,42 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "tb_item")
-public class Item implements Serializable {
-    
-    private static final long serialVersionUID = 1L;
-
+@Table(name = "td_item")
+public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-    private String nome;
-    private double valor;
+    @Column(name = "id_item")
+    private int id_item;
+    
+    @Column(name = "nome_item")
+    private String nome_item;
+    
+    @Column(name = "quantia")
     private int quantia;
 
     public Item() {
-        super();
     }
 
-    public Item(int id, String nome, double valor, int quantia) {
-        super();
-        this.id = id;
-        this.nome = nome;
-        this.valor = valor;
+    public Item(int id_item, String nome_item, int quantia) {
+        this.id_item = id_item;
+        this.nome_item = nome_item;
         this.quantia = quantia;
     }
 
-    public int getId() {
-        return id;
+    public int getId_item() {
+        return id_item;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setId_item(int id_item) {
+        this.id_item = id_item;
     }
 
-    public String getNome() {
-        return nome;
+    public String getNome_item() {
+        return nome_item;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public double getValor() {
-        return valor;
-    }
-
-    public void setValor(double valor) {
-        this.valor = valor;
+    public void setNome_item(String nome_item) {
+        this.nome_item = nome_item;
     }
 
     public int getQuantia() {
